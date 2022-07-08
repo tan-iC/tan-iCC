@@ -168,6 +168,7 @@ Node *new_num(int val){
 Node *expr();
 Node *mul();
 Node *primary();
+Node *unary();
 
 //ノードを用いた式の作成
 Node *expr(){
@@ -176,6 +177,7 @@ Node *expr(){
     for(;;){
         if (consume('+')){
             node = new_binary(ND_ADD, node, mul());
+
         }
         else if(consume('-')){
             node = new_binary(ND_SUB, node, mul());
@@ -188,14 +190,14 @@ Node *expr(){
 
 //優先度1ノード
 Node *mul(){
-    Node *node = primary();
+    Node *node = unary();
 
     for (;;){
         if (consume('*')){
-            node = new_binary(ND_MUL, node, primary());
+            node = new_binary(ND_MUL, node, unary());
         }
         else if (consume('/')){
-            node = new_binary(ND_DIV, node, primary());
+            node = new_binary(ND_DIV, node, unary());
         }
         else{
             return node;
@@ -214,6 +216,29 @@ Node *primary(){
 
     //そうでない場合数値
     return new_num(expect_number());
+}
+
+/*
+expr    = mul ("+" mul | "-" mul)*
+mul     = primary ("*" primary | "/" primary)*
+primary = num | "(" expr ")"
+*/
+
+// 
+
+/*
+expr    = mul ("+" mul | "-" mul)*
+mul     = unary ("*" unary | "/" unary)*
+unary   = ("+" | "-")? primary
+primary = num | "(" expr ")"
+*/
+
+Node *unary() {
+  if (consume('+'))
+    return primary();
+  if (consume('-'))
+    return new_binary(ND_SUB, new_num(0), primary());
+  return primary();
 }
 
 //スタックマシン化
